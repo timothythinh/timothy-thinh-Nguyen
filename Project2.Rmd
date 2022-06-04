@@ -1,0 +1,115 @@
+---
+title: "Project 2C"
+output: html_notebook
+---
+Intro
+
+Scientific question: Do NF-κB and IRF3 share enough structural similarity to assume a resemblance in mechanisms which would produce IL-6, a lipid both are responsible for producing in response to LPS?
+
+Background: Both NF-κB and IRF3 pathways can be triggered by the presence of LPS, a key component of gram-negative bacterial cell walls, resulting in an increased production of IL-6. This is significant since this can result in sepsis, a chronic systemic inflammatory response syndrome and a leading cause of death in critically ill patients. Data is being sourced from ncbi.gov and rcsb.org. 
+
+Hypothesis: If activation of either NF-κB and IRF3 both result in the production of IL-6, then there may be significant structural similarities between the two.
+
+Analysis: In order to properly compare NF-κB and IRF3, sequence logos and 3D protein measurements will be utilized to visualize the proteins. 
+
+
+Loading in Packages
+
+Packages I'll be needing:
+bioBd: allows me to compare and analysis PBD files
+ggseqlogo: allows me to make logo seqences 
+ggplot2: allows me to plot results form bio3d
+Biostrings: allows me to turn fasta files into dataframes
+magick: allows me to import and preview images 
+
+```{r}
+#install.packages("ggseqlogo")
+require(ggplot2)
+require(ggseqlogo)
+library("ggseqlogo")
+library("Biostrings")
+library("bio3d")
+library(magick)
+```
+
+
+
+Performing Bioinformatics Analysis
+
+First I will use sequence logos (A)
+Wagih, Omar. ggseqlogo: a versatile R package for drawing sequence logos. Bioinformatics (2017). https://doi.org/10.1093/bioinformatics/btx469
+```{r}
+#here i am turning fasta files into datasets
+nfkb1 <- readDNAStringSet("nfkb1.fasta")
+seq_name = names(nfkb1)
+sequence = paste(nfkb1)
+nfkb1_data <- data.frame(seq_name, sequence)
+
+nfkb2 <- readDNAStringSet("nfkb2.fasta")
+seq_name = names(nfkb2)
+sequence = paste(nfkb2)
+nfkb2_data <- data.frame(seq_name, sequence)
+
+irf3 <- readDNAStringSet("irf3.fasta")
+seq_name = names(irf3)
+sequence = paste(irf3)
+irf3_data <- data.frame(seq_name, sequence)
+```
+
+Next up is for bio3D(B), majority of code is just to set parameters for the plot
+```{r}
+p_nfkb1 <-read.pdb("1NFK.pdb")
+p_irf3 <-read.pdb("1J2F.pdb")
+```
+
+```{r}
+p_nfkb1$atom[1:3, c("resno","resid","elety","x","y","z")]
+p_irf3$atom[1:3, c("resno","resid","elety","x","y","z")]
+```
+
+```{r}
+c_nfkb1 <- atom.select(p_nfkb1, "calpha")
+c_irf3 <- atom.select(p_irf3, "calpha")
+```
+
+
+Plotting The Results(A)
+
+Then I turn them into logo sequences using ggseqlogo
+```{r}
+ggseqlogo(nfkb1_data)
+```
+
+```{r}
+ggseqlogo(nfkb2_data)
+```
+
+```{r}
+ggseqlogo(irf3_data)
+```
+
+
+
+Plotting The Results(B)
+```{r}
+bf <- p_nfkb1$atom$b[c_nfkb1$atom]
+plot.bio3d(bf, resno=pdb, sse=pdb, ylab="B-factor", xlab="Residue", typ="l")
+
+bf <- p_irf3$atom$b[c_irf3$atom]
+plot.bio3d(bf, resno=pdb, sse=pdb, ylab="B-factor", xlab="Residue", typ="l")
+```
+
+```{r}
+#install.packages('magick')
+library(magick)
+
+img <- magick::image_read('protein comparaison.JPG')
+plot(img) 
+```
+Analyzing the Results
+In the figure above is a comparison with both protein NFKB1(blue) and IRF3(green) using pyMOL. We can see that NFKB1 is much larger than IRF3. We also see that there is actually very little resemblance between the two which makes me believe that my hypothesis is incorrect. However, this study lacks the ability to hone down both structures to their singular receptors making it difficult to come toa  sound conclusion. Hopefully later down the road, this will be more doable for me. 
+
+Using sequence logos turned out to backfire since the sequences were just way too long to really get any meaning out of them. 
+
+We then take a look at the plots with axis's B-factor and residue. The first figure is NFKB1 while the second is IRF3. We can see from the figures that NFK1 has, on average of B-factor is all levels. B-factor is used to describe the attenuation of neutron scattering caused by thermal motion. This is significant since it shows that there are structural differences between the two structures. This makes sense since the size of the protein NFKB1 is much larger than IRF3. 
+
